@@ -16,38 +16,48 @@ test_cases = [
 def test_maxima(inp, exp):
     out = find_maxima(inp)
     assert out == exp
+    impl_test(inp, out)
+
 
 def test_randomized(seedval):
     # Given
     rand_gen = np.random.RandomState(seed=seedval)
-    numel = 16# rand_gen.randint(0, 1000)
+    numel = rand_gen.randint(0, 1000)
     test_vec = rand_gen.randint(20, size=numel)
-
-    print(f'test_vec: {test_vec}')
 
     # When
     out = find_maxima(test_vec)
-    print(f'out: {out}')
 
     # Then
+    impl_test(test_vec, out)
+
+
+def impl_test(test_vec, out):
+    print(f'test_vec: {test_vec}')
+    print(f'out: {out}')
+
+    dv = np.diff(out)
+    assert np.all(dv > 1), "Adjacent local maxima is impossible"
+
     first = out[0]
-    middle = out[1:-1]
     last = out[-1]
 
     if first == 0:
         assert test_vec[0] > test_vec[1]
+        middle = out[1:-1]
     else:
-        for k in range(1, first):
-            assert test_vec[k] >= test_vec[k-1], f'{k}'
+        middle = out[:-1]
 
     if len(middle) > 1:
         for i, j in zip(middle[:-1], middle[1:]):
             up = False
-            assert test_vec[i] > test_vec[i-1], f'i: {i}, j: {j}'
+            v1, v0 = test_vec[i], test_vec[i-1]
+            assert v1 > v0, f'i: {i}, inp[i]: {v1}, inp[i-1]: {v0}'
             for k in range(i+1, j):
-                if test_vec[k] > test_vec[k-1]:
+                v1, v0 = test_vec[k], test_vec[k-1]
+                if v1 > v0:
                     up = True
-                if test_vec[k] < test_vec[k-1]:
+                elif v1 < v0:
                     assert not up, f'i: {i}, j: {j}, k: {k}'
         assert test_vec[j] > test_vec[j-1], f'i: {i}, j: {j}'
 
@@ -57,4 +67,5 @@ def test_randomized(seedval):
     else:
         for k in range(last+1, len(test_vec)):
             assert test_vec[k] <= test_vec[k-1], f'{k}'
+
 
